@@ -43,7 +43,7 @@ Apple offers no public way to write to Notes, Reminders or Calendar from outside
 This has consequences worth knowing:
 
 - **It is unofficial.** Hop relies on how the icloud.com apps are built inside. When Apple changes them, a feature can stop working until the extension is updated. The **Diagnostic** link in the popup records the structure of the three apps (names of functions and properties, never your content) in a file that helps find what changed.
-- **It needs the tabs.** The first action for each app opens its icloud.com tab in the background and takes a few seconds. After that the tab is reused. If your iCloud session has expired, Hop shows the tab so you can sign in.
+- **It needs the tabs.** The first action for each app opens its icloud.com tab and takes a few seconds. After that the tab is reused. Hop keeps these tabs in a separate window that stays minimized; if you already have the app open in a tab of your own, it uses that one. If your iCloud session has expired, Hop shows the tab so you can sign in.
 - **Plain text only.** What Hop sends is text. It does not add formatting, images or attachments.
 - **Time zone.** Event and task times are read in your iCloud account's time zone, which is normally the one your computer uses.
 
@@ -55,7 +55,7 @@ Everything happens in your browser, between Hop and the icloud.com tabs. The ext
 
 | Permission | Why it is needed |
 | --- | --- |
-| Access to `icloud.com` | Ask the Notes, Reminders and Calendar web apps to create what you send |
+| Access to `www.icloud.com` | Ask the Notes, Reminders and Calendar web apps to create what you send |
 | `scripting` and `activeTab` | Read the text you selected on the current page, and show the result on it |
 | `contextMenus` | Add the two right-click entries |
 | `downloads` | Save the diagnostic file when you ask for it |

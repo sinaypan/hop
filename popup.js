@@ -140,6 +140,16 @@ const clock = () => {
   ];
 };
 
+// Les notes récentes ne sont demandées que pour « Ajouter à une note » : la
+// demande charge l'onglet Notes d'iCloud, inutile pour une tâche ou un évènement.
+let notesRequested = false;
+const loadNotes = async () => {
+  if (notesRequested || state.mode !== 'note' || state.noteMode !== 'append') return;
+  notesRequested = true;
+  state.notes = (await chrome.runtime.sendMessage({ type: 'recent-notes' })) ?? [];
+  render();
+};
+
 const render = () => {
   const { mode } = state;
   document.body.dataset.mode = mode;
@@ -173,6 +183,7 @@ const render = () => {
   const missingNote = mode === 'note' && state.noteMode === 'append' && !state.noteId;
   sendButton.textContent = sendLabel();
   sendButton.disabled = state.sending || !text.value.trim() || missingNote;
+  loadNotes();
 };
 
 // Le texte en cours survit à la fermeture de la fenêtre, jusqu'à l'envoi.
@@ -256,11 +267,6 @@ const useSelection = async () => {
   }
 };
 
-const loadNotes = async () => {
-  state.notes = (await chrome.runtime.sendMessage({ type: 'recent-notes' })) ?? [];
-  render();
-};
-
 const request = () => {
   const date = `${state.date.year}-${pad(state.date.month)}-${pad(state.date.day)}`;
   const time = `${pad(state.time.hour)}:${pad(state.time.minute)}`;
@@ -304,4 +310,3 @@ chrome.runtime.sendMessage({ type: 'last-outcome' }).then((outcome) => {
 
 render();
 useSelection();
-loadNotes();

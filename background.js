@@ -1,7 +1,7 @@
 // Hop envoie du texte vers Apple Notes, Rappels et Calendrier en passant par un onglet
 // icloud.com où l'utilisateur est connecté : l'extension ne voit jamais le mot
-// de passe Apple. L'onglet est ouvert en arrière-plan au premier envoi, puis
-// réutilisé.
+// de passe Apple. L'onglet est ouvert au premier envoi, dans une fenêtre à part
+// qui reste réduite, puis réutilisé.
 
 import { calendarInPage, inspectPage, notesInPage, remindersInPage } from './page.js';
 
@@ -38,16 +38,44 @@ const runInPage = async (tabId, func, args = []) => {
 
 const focusTab = async (tab) => {
   await chrome.tabs.update(tab.id, { active: true });
-  await chrome.windows.update(tab.windowId, { focused: true });
+  const { state } = await chrome.windows.get(tab.windowId);
+  await chrome.windows.update(tab.windowId, state === 'minimized' ? { state: 'normal', focused: true } : { focused: true });
+};
+
+// La fenêtre où Hop range ses onglets iCloud : une fenêtre ordinaire qui ne
+// contient que des pages icloud.com. Elle est retrouvée à son contenu, car le
+// service worker oublie tout quand il s'endort.
+const hopWindow = async () => {
+  const tabsByWindow = new Map();
+  for (const tab of await chrome.tabs.query({})) {
+    tabsByWindow.set(tab.windowId, [...(tabsByWindow.get(tab.windowId) ?? []), tab]);
+  }
+  for (const [windowId, tabs] of tabsByWindow) {
+    // L'adresse n'est visible que pour icloud.com : tout autre onglet écarte la fenêtre.
+    if (!tabs.every((tab) => (tab.url || tab.pendingUrl || '').startsWith('https://www.icloud.com/'))) continue;
+    const found = await chrome.windows.get(windowId);
+    if (found.type === 'normal') return found;
+  }
+  return null;
 };
 
 // L'onglet iCloud de l'application demandée ; `opened` s'il vient d'être (re)chargé.
-const appTab = async (app, { active }) => {
+// Un onglet déjà ouvert quelque part est repris tel quel. Sinon Hop l'ouvre
+// dans sa fenêtre, qui reste réduite dans la barre des tâches.
+const appTab = async (app) => {
   const [existing] = await chrome.tabs.query({ url: `${appUrl(app)}*` });
-  if (!existing) return { tab: await chrome.tabs.create({ url: appUrl(app), active }), opened: true };
-  // Onglet mis en veille par Chrome : il faut le recharger avant de s'en servir.
-  if (existing.discarded) await chrome.tabs.reload(existing.id);
-  return { tab: existing, opened: existing.discarded };
+  if (existing) {
+    // Onglet mis en veille par Chrome : il faut le recharger avant de s'en servir.
+    if (existing.discarded) await chrome.tabs.reload(existing.id);
+    return { tab: existing, opened: existing.discarded };
+  }
+  const home = await hopWindow();
+  if (home) return { tab: await chrome.tabs.create({ windowId: home.id, url: appUrl(app), active: false }), opened: true };
+  // Chrome n'ouvre pas toujours la fenêtre réduite quand on le lui demande à la
+  // création : elle est donc créée sans prendre la main, puis réduite.
+  const created = await chrome.windows.create({ url: appUrl(app), focused: false });
+  await chrome.windows.update(created.id, { state: 'minimized' });
+  return { tab: created.tabs[0], opened: true };
 };
 
 const untilReady = async (tabId, func, args, timeout) => {
@@ -66,12 +94,16 @@ const untilReady = async (tabId, func, args, timeout) => {
 // `reveal` : afficher l'onglet s'il n'est pas prêt, puis réessayer.
 // Le résultat porte `revealedTabId` quand l'onglet iCloud a dû être affiché.
 const callApp = async (app, func, args, { reveal = true, timeout = READY_TIMEOUT_MS } = {}) => {
-  const { tab } = await appTab(app, { active: false });
+  const { tab } = await appTab(app);
   let result = await untilReady(tab.id, func, args, timeout);
   if (result.waiting && reveal) {
     // Pas prêt : session iCloud expirée, ou onglet que Chrome n'a jamais affiché.
     await focusTab(tab);
     result = { ...(await untilReady(tab.id, func, args, timeout)), revealedTabId: tab.id };
+    // Envoi réussi une fois l'onglet affiché : la fenêtre de Hop se range de nouveau.
+    if (result.ok && (await hopWindow())?.id === tab.windowId) {
+      await chrome.windows.update(tab.windowId, { state: 'minimized' });
+    }
   }
   return result;
 };
@@ -215,7 +247,7 @@ const downloadJson = (name, data) =>
 const runDiagnostic = async () => {
   const report = { version: chrome.runtime.getManifest().version, date: new Date().toISOString(), apps: {} };
   for (const app of Object.keys(APPS)) {
-    const { tab, opened } = await appTab(app, { active: true });
+    const { tab, opened } = await appTab(app);
     await focusTab(tab);
     await sleep(opened ? 12000 : 3000);
     report.apps[app] = (await runInPage(tab.id, inspectPage)) ?? { error: 'page inaccessible' };

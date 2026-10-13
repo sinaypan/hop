@@ -291,12 +291,23 @@ export async function calendarInPage(details) {
   };
   if (details.description) event.description = details.description;
 
-  const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const isSaving = () => Boolean(store.getState().events.value.event.isSavingEventDetails?.[guid]);
-  // L'envoi au serveur démarre juste après la validation ; on note son passage.
+  // L'envoi au serveur démarre juste après la validation. On suit son début et
+  // sa fin par les changements du store, pas par une attente répétée : Chrome
+  // ralentit fortement les minuteries d'une page qui n'est pas affichée.
   let started = false;
-  const unsubscribe = store.subscribe(() => {
-    if (isSaving()) started = true;
+  let unsubscribe = () => {};
+  const timers = [];
+  const outcome = new Promise((resolve) => {
+    unsubscribe = store.subscribe(() => {
+      if (isSaving()) started = true;
+      else if (started) {
+        const status = store.getState().events.value.event.list.items.find((item) => item.id === guid)?.status;
+        resolve(status === 'failedToAdd' ? { error: 'save', detail: 'refusé par iCloud' } : { ok: true });
+      }
+    });
+    timers.push(setTimeout(() => !started && resolve({ error: 'save', detail: 'envoi non démarré' }), 5000));
+    timers.push(setTimeout(() => resolve({ error: 'save', detail: 'timeout' }), 15000));
   });
   try {
     store.dispatch({ type: 'events/newEventCreatedWithDetails', payload: { guid, overrides: event, displayVariant: 'FindAndOpen', ignoreSyncer: true } });
@@ -304,20 +315,12 @@ export async function calendarInPage(details) {
     store.dispatch({ type: 'events/eventDetailsSaved', payload: { eventGuid: guid, localEventDetails: event } });
     // Referme le panneau de détails que la création a ouvert.
     store.dispatch({ type: 'events/eventUninspected' });
-
-    for (let waited = 0; waited < 15000; waited += 250) {
-      await pause(250);
-      if (started && !isSaving()) {
-        const status = store.getState().events.value.event.list.items.find((item) => item.id === guid)?.status;
-        return status === 'failedToAdd' ? { error: 'save', detail: 'refusé par iCloud' } : { ok: true };
-      }
-      if (!started && waited >= 5000) return { error: 'save', detail: 'envoi non démarré' };
-    }
-    return { error: 'save', detail: 'timeout' };
+    return await outcome;
   } catch (error) {
     return { error: 'save', detail: String(error?.message ?? error) };
   } finally {
     unsubscribe();
+    timers.forEach(clearTimeout);
   }
 }
 
