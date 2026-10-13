@@ -256,10 +256,16 @@ const runDiagnostic = async () => {
   flashBadge(true);
 };
 
+const addMenu = (id, title) => new Promise((done) => chrome.contextMenus.create({ id, title, contexts: ['selection'] }, done));
+
+// Chrome peut signaler deux installations coup sur coup (mise à jour de l'extension et
+// de Chrome) : les menus sont refaits l'un après l'autre, sinon ils seraient créés en double.
+let menus = Promise.resolve();
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({ id: MENU_NOTE, title: 'Nouvelle note Apple avec la sélection', contexts: ['selection'] });
-    chrome.contextMenus.create({ id: MENU_TASK, title: 'Nouvelle tâche Apple avec la sélection', contexts: ['selection'] });
+  menus = menus.then(async () => {
+    await chrome.contextMenus.removeAll();
+    await addMenu(MENU_NOTE, 'Nouvelle note Apple avec la sélection');
+    await addMenu(MENU_TASK, 'Nouvelle tâche Apple avec la sélection');
   });
 });
 
