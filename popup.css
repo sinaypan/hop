@@ -2,21 +2,43 @@
   color-scheme: light dark;
   --bg: #ffffff;
   --field: #f2f2f7;
+  --raised: #ffffff;
   --text: #1c1c1e;
   --muted: #8e8e93;
-  --accent: #f5a300;
-  --accent-text: #1c1c1e;
-  --error: #b3261e;
+  --error: #c0271d;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #1c1c1e;
     --field: #2c2c2e;
+    --raised: #48484a;
     --text: #f2f2f7;
-    --muted: #8e8e93;
-    --accent: #ffd60a;
     --error: #ff6961;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Une couleur par destination, celles des applications d'Apple. */
+body[data-mode='note'] {
+  --accent: #f5a300;
+  --accent-text: #1c1c1e;
+}
+
+body[data-mode='task'] {
+  --accent: #0a84ff;
+  --accent-text: #ffffff;
+}
+
+body[data-mode='event'] {
+  --accent: #ff453a;
+  --accent-text: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  body[data-mode='note'] {
+    --accent: #ffd60a;
   }
 }
 
@@ -24,8 +46,12 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
-  width: 356px;
+  width: 360px;
   margin: 0;
   padding: 12px;
   background: var(--bg);
@@ -33,10 +59,60 @@ body {
   font: 13px/1.4 system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
+button {
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+/* Les trois onglets : note, tâche, évènement. */
+#modes {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 11px;
+  background: var(--field);
+}
+
+#modes button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 4px;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+#modes button[aria-selected='true'] {
+  background: var(--raised);
+  box-shadow: var(--shadow);
+  color: var(--text);
+}
+
+#modes svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#modes button[aria-selected='true'] svg {
+  color: var(--accent);
+}
+
 textarea {
   display: block;
   width: 100%;
-  height: 132px;
+  height: 112px;
+  margin-top: 10px;
   padding: 10px 12px;
   border: 0;
   border-radius: 12px;
@@ -51,66 +127,231 @@ textarea::placeholder {
   color: var(--muted);
 }
 
-footer {
+/* Les réglages de l'onglet choisi. Pour une tâche, le choix de l'échéance
+   précède la date ; pour un évènement, la durée la suit. */
+#options {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-top: 10px;
 }
 
-select {
-  flex: 1;
-  min-width: 0;
-  padding: 7px 10px;
-  border: 0;
-  border-radius: 10px;
-  outline: 0;
-  background: var(--field);
-  color: inherit;
-  font: inherit;
+#task-when {
+  order: 1;
 }
 
 #when {
+  order: 2;
+}
+
+#event-length {
+  order: 3;
+}
+
+.chips {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+}
+
+.chips button {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: var(--field);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.chips button[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--accent) 22%, var(--field));
+  color: var(--text);
+  font-weight: 600;
+}
+
+.fields {
+  display: flex;
+  gap: 6px;
+}
+
+.chips + ul {
   margin-top: 8px;
 }
 
-#when[hidden] {
-  display: none;
-}
-
-#when input,
-#when select {
+/* La date et l'heure : deux boutons qui ouvrent le calendrier ou l'horloge. */
+.fields button {
+  display: flex;
   flex: 1;
-  min-width: 0;
-  padding: 6px 8px;
-  border: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
   border-radius: 10px;
-  outline: 0;
   background: var(--field);
-  color: inherit;
-  font: inherit;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
-#when #date {
-  flex: 1.6;
+.fields button[aria-expanded='true'] {
+  background: color-mix(in srgb, var(--accent) 22%, var(--field));
 }
 
-#when #time {
+.fields svg,
+#picker svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#picker {
+  order: 4;
+  padding: 8px 10px 10px;
+  border-radius: 12px;
+  background: var(--field);
+}
+
+#picker button {
+  height: 28px;
+  padding: 0;
+  border-radius: 999px;
+  background: none;
+  font-variant-numeric: tabular-nums;
+}
+
+#picker button:hover {
+  background: color-mix(in srgb, var(--text) 9%, transparent);
+}
+
+#picker button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 700;
+}
+
+.month {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.month strong {
   flex: 1;
+  text-align: center;
 }
 
-#when #duration {
-  flex: 1.3;
+.month .arrow {
+  display: grid;
+  width: 28px;
+  place-items: center;
 }
 
-#when input:disabled {
-  opacity: 0.4;
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+
+.days span {
+  padding: 2px 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.days .today:not([aria-pressed='true']) {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2px;
+}
+
+.caption {
+  margin: 0 2px 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.slots + .caption {
+  margin-top: 8px;
+}
+
+/* Sélecteur ouvert : la zone de texte se réduit pour que tout tienne dans la fenêtre. */
+.picking textarea {
+  height: 64px;
+}
+
+/* Les notes récentes, pour « Ajouter à une note ». */
+#notes {
+  max-height: 150px;
+  margin-bottom: 0;
+  padding: 4px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) transparent;
+  border-radius: 12px;
+  background: var(--field);
+  list-style: none;
+}
+
+#notes li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#notes li:hover {
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+
+#notes li[aria-selected='true'] {
+  background: color-mix(in srgb, var(--accent) 24%, var(--field));
+}
+
+#notes li span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#notes li::after {
+  width: 12px;
+  color: var(--text);
+  font-weight: 700;
+  content: '';
+}
+
+#notes li[aria-selected='true']::after {
+  content: '✓';
+}
+
+.hint {
+  margin: 8px 2px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
 }
 
 #status {
-  min-height: 17px;
-  margin: 8px 2px 0;
+  flex: 1;
+  margin: 0;
   color: var(--muted);
   font-size: 12px;
 }
@@ -119,18 +360,13 @@ select {
   color: var(--error);
 }
 
-button {
-  border: 0;
-  cursor: pointer;
-  font: inherit;
-}
-
 #send {
-  padding: 7px 14px;
+  padding: 7px 16px;
   border-radius: 999px;
   background: var(--accent);
   color: var(--accent-text);
   font-weight: 600;
+  white-space: nowrap;
 }
 
 #send:disabled {
@@ -140,11 +376,12 @@ button {
 
 .link {
   display: block;
-  margin: 4px auto 0;
+  margin: 8px auto 0;
   padding: 0;
   background: none;
   color: var(--muted);
   font-size: 11px;
+  opacity: 0.7;
 }
 
 .link:hover {

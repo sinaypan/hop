@@ -4,20 +4,22 @@
 
 A Chrome extension that sends text to Apple Notes, Reminders and Calendar from a Windows PC (or any computer with Chrome), so it shows up on your iPhone a moment later.
 
-<img src="screenshots/note.png" width="356" alt="The Hop popup with a new note">
+<img src="screenshots/note.png" width="360" alt="The Hop popup with a new note">
 
 ## What it does
 
 - **New note.** Write in the popup, or select text on a page first and it is picked up with the page address. The first line becomes the title.
-- **Add to a note.** Choose one of your 12 most recent notes and the text is added at its end. The rest of the note, with its formatting, checklists and attachments, is left as it is.
+- **Add to a note.** Choose one of your 12 most recent notes from the list and the text is added at its end. The rest of the note, with its formatting, checklists and attachments, is left as it is.
 - **New task.** The first line is the title, the rest goes in the task's notes. A due date is optional, with or without a time.
 - **New event.** Pick a date, a start time and a length (30 min, 1 h, 2 h or the whole day).
 - **Right click.** "Nouvelle note Apple avec la sélection" and "Nouvelle tâche Apple avec la sélection" on any selected text.
 - **One place to sort.** Tasks go to a Reminders list named `Hop` and events to a calendar named `Hop`, so you can tell what came from the extension and keep or delete it later.
 
-<img src="screenshots/task.png" width="356" alt="A new task with a due date"> <img src="screenshots/event.png" width="356" alt="A new event">
+<img src="screenshots/append.png" width="360" alt="Adding to an existing note">
 
-The popup opens with the toolbar button or `Alt+Shift+N`. The interface is in French.
+<img src="screenshots/task.png" width="360" alt="A new task with a due date"> <img src="screenshots/event.png" width="360" alt="A new event">
+
+The popup opens with the toolbar button or `Alt+Shift+N`, on the tab you used last. The interface is in French.
 
 ## Before you start
 

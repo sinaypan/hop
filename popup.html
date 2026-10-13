@@ -5,23 +5,65 @@
     <title>Hop</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
-  <body>
-    <textarea id="text" placeholder="Écris ici. La première ligne sert de titre." autofocus></textarea>
-    <footer>
-      <select id="target" aria-label="Destination">
-        <option value="note">Nouvelle note</option>
-        <option value="task">Nouvelle tâche</option>
-        <option value="event">Nouvel évènement</option>
-        <optgroup id="notes" label="Ajouter à une note" hidden></optgroup>
-      </select>
-      <button id="send" type="button">Envoyer</button>
-    </footer>
-    <div id="when" hidden>
-      <input id="date" type="date" aria-label="Date" />
-      <input id="time" type="time" aria-label="Heure de début" />
-      <select id="duration" aria-label="Durée ou échéance"></select>
+  <body data-mode="note">
+    <nav id="modes" role="tablist" aria-label="Type d’envoi">
+      <button type="button" role="tab" data-mode="note">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="10" height="12" rx="2.2" /><path d="M5.6 5.8h4.8M5.6 8.2h4.8M5.6 10.6h2.8" /></svg>
+        Note
+      </button>
+      <button type="button" role="tab" data-mode="task">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.6" /><path d="M5.5 8.2l1.8 1.8 3.3-3.7" /></svg>
+        Tâche
+      </button>
+      <button type="button" role="tab" data-mode="event">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.4" y="3.4" width="11.2" height="10.2" rx="2.2" /><path d="M2.4 6.6h11.2M5.4 1.9v2.6M10.6 1.9v2.6" /></svg>
+        Évènement
+      </button>
+    </nav>
+
+    <textarea id="text" autofocus></textarea>
+
+    <div id="options">
+      <section id="note-options">
+        <div class="chips" id="note-mode" role="group" aria-label="Destination">
+          <button type="button" data-value="new">Nouvelle note</button>
+          <button type="button" data-value="append">Ajouter à une note</button>
+        </div>
+        <ul id="notes" role="listbox" aria-label="Notes récentes"></ul>
+        <p id="notes-hint" class="hint"></p>
+      </section>
+
+      <div class="chips" id="task-when" role="group" aria-label="Échéance">
+        <button type="button" data-value="none">Sans date</button>
+        <button type="button" data-value="day">Un jour</button>
+        <button type="button" data-value="time">Jour et heure</button>
+      </div>
+
+      <div class="fields" id="when">
+        <button type="button" id="date-button" aria-label="Date">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.4" y="3.4" width="11.2" height="10.2" rx="2.2" /><path d="M2.4 6.6h11.2M5.4 1.9v2.6M10.6 1.9v2.6" /></svg>
+          <span></span>
+        </button>
+        <button type="button" id="time-button" aria-label="Heure">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.6" /><path d="M8 4.8V8l2.2 1.4" /></svg>
+          <span></span>
+        </button>
+      </div>
+
+      <div class="chips" id="event-length" role="group" aria-label="Durée">
+        <button type="button" data-value="30">30 min</button>
+        <button type="button" data-value="60">1 h</button>
+        <button type="button" data-value="120">2 h</button>
+        <button type="button" data-value="day">Journée</button>
+      </div>
+
+      <div id="picker"></div>
     </div>
-    <p id="status" role="status"></p>
+
+    <footer>
+      <p id="status" role="status"></p>
+      <button id="send" type="button"></button>
+    </footer>
     <button id="diagnostic" class="link" type="button" title="À lancer si Hop ne fonctionne plus : relève la structure du site iCloud, sans le contenu de tes notes">Diagnostic</button>
     <script src="popup.js"></script>
   </body>

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Hop",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Envoie du texte vers Apple Notes, Rappels et Calendrier (iCloud) depuis Chrome : note, ajout à une note, tâche, évènement.",
   "permissions": ["contextMenus", "scripting", "activeTab", "downloads"],
   "host_permissions": ["https://*.icloud.com/*"],
