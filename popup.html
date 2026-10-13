@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Hop</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <textarea id="text" placeholder="Écris ici. La première ligne sert de titre." autofocus></textarea>
+    <footer>
+      <select id="target" aria-label="Destination">
+        <option value="note">Nouvelle note</option>
+        <option value="task">Nouvelle tâche</option>
+        <option value="event">Nouvel évènement</option>
+        <optgroup id="notes" label="Ajouter à une note" hidden></optgroup>
+      </select>
+      <button id="send" type="button">Envoyer</button>
+    </footer>
+    <div id="when" hidden>
+      <input id="date" type="date" aria-label="Date" />
+      <input id="time" type="time" aria-label="Heure de début" />
+      <select id="duration" aria-label="Durée ou échéance"></select>
+    </div>
+    <p id="status" role="status"></p>
+    <button id="diagnostic" class="link" type="button" title="À lancer si Hop ne fonctionne plus : relève la structure du site iCloud, sans le contenu de tes notes">Diagnostic</button>
+    <script src="popup.js"></script>
+  </body>
+</html>
